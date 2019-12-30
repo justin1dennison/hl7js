@@ -13,6 +13,7 @@
     "tape": "^4.12.1"
   },
   "dependencies": {
+    "date-fns": "^2.8.1",
     "lodash": "^4.17.15"
   }
 }
