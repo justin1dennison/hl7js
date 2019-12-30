@@ -2,6 +2,11 @@ const test = require('tape')
 const { Segment } = require('../lib/segments.js')
 const isArray = require('lodash/isArray')
 
+test('Segment throws error if name is not 3 characters in length and capitalized', t => {
+  t.throws(() => new Segment('yyy'))
+  t.throws(() => new Segment('YW'))
+  t.end()
+})
 
 test('Field at a given nonzero index can be set', t => {
   const segment = new Segment('XXX')
@@ -37,20 +42,24 @@ test('Field can be set using array', t => {
   const segment = new Segment('XXX')
   segment.setField(3, ['1', '2', '3'])
   t.true(isArray(segment.getField(3)), 'Composed field 1^2^3')
-  t.equals(segment.getField(3).length, 3,  'Getting composed fields as array')
-  t.deepEquals(segment.getField(3), ['1', '2', '3'], 'Getting single value from composed field')
+  t.equals(segment.getField(3).length, 3, 'Getting composed fields as array')
+  t.deepEquals(
+    segment.getField(3),
+    ['1', '2', '3'],
+    'Getting single value from composed field'
+  )
   t.end()
 })
 
 test('Fields from a given position to end can be retrieved in an array', t => {
-  const segment = new Segment('XXX')  
+  const segment = new Segment('XXX')
   segment.setField(8, 'aaa')
   t.equals(segment.getFields(2).length, 7, 'Getting all fields from 2nd index')
   t.end()
 })
 
 test('A chunk of fields can be retrieved from a segment', t => {
-  const segment = new Segment('XXX')  
+  const segment = new Segment('XXX')
   segment.setField(8, 'aaa')
   t.equals(segment.getFields(2, 4).length, 3, 'Getting fields from 2 till 4')
   t.end()
