@@ -1,6 +1,6 @@
-const test = require('tape')
-const { Segment } = require('../lib/segments.js')
-const isArray = require('lodash/isArray')
+import test from 'tape'
+import { Segment } from '../lib/segments'
+import isArray from 'lodash/isArray'
 
 test('Segment throws error if name is not 3 characters in length and capitalized', t => {
   t.throws(() => new Segment('yyy'))
@@ -42,11 +42,10 @@ test('Field can be set using array', t => {
   const segment = new Segment('XXX')
   segment.setField(3, ['1', '2', '3'])
   t.true(isArray(segment.getField(3)), 'Composed field 1^2^3')
-  t.equals(segment.getField(3).length, 3, 'Getting composed fields as array')
   t.deepEquals(
     segment.getField(3),
     ['1', '2', '3'],
-    'Getting single value from composed field'
+    'Getting array from composed field'
   )
   t.end()
 })

@@ -1,4 +1,4 @@
-const test = require('tape')
+import test from 'tape'
 
 test('subfields can be retained when required', t => {
   t.pass()
