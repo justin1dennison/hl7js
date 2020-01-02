@@ -1,7 +1,12 @@
 import test from 'tape'
+import Message from '../lib/messages'
+import { Segment } from '../lib/segments'
 
 test('subfields can be retained when required', t => {
-  t.pass()
+  const message = new Message("MSH|^~\\&|1|\rPV1|1|O|^AAAA1^^^BB|", null, true)
+  const pv = (message.getSegmentByIndex(1) as Segment)
+  const fields = pv.getField(3)
+  t.deepEquals(fields, ['', 'AAAA1', '', '', 'BB'])
   t.end()
 })
 

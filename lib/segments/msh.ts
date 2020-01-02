@@ -15,7 +15,7 @@ export class MSH extends Segment {
    * @throws InvalidArgumentError
    * @throws Error
    */
-  constructor(fields = null, globals?: HL7Globals) {
+  constructor(fields: Field[] | null = null, globals?: HL7Globals) {
     super('MSH', fields)
     if (!isNil(fields)) {
       if (!isObject(globals)) {
