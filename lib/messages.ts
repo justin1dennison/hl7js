@@ -1,11 +1,10 @@
 import { HL7Exception, InvalidArgumentError } from './errors'
 import { HL7Globals, Option, Field } from './types'
-import { negate, isEmpty, trim, isEqual } from 'lodash'
+import { negate, isEmpty, trim, isEqual, isArray, flatten } from 'lodash'
 import { MSH, Segment } from './segments'
-import isArray = require('lodash/isArray')
 
 export default class Message {
-    segments: Segment[] = []
+    protected segments: Segment[] = []
     segmentSeparator: string = '\n'
     segmentEndingBar: boolean = true
     fieldSeparator: string = '|'
@@ -19,14 +18,14 @@ export default class Message {
         this.segments = []
 
         if (globals) {
-            this.segmentSeparator = globals.SEGMENT_SEPARATOR as string
-            this.segmentEndingBar = globals.SEGMENT_ENDING_BAR as boolean
-            this.fieldSeparator = globals.FIELD_SEPARATOR
-            this.componentSeparator = globals.COMPONENT_SEPARATOR
-            this.subcomponentSeparator = globals.SUBCOMPONENT_SEPARATOR
-            this.repetitionSeparator = globals.REPETITION_SEPARATOR
-            this.escapeChar = globals.ESCAPE_CHARACTER
-            this.hl7Version = globals.HL7_VERSION
+            this.segmentSeparator = globals.SEGMENT_SEPARATOR as string ?? '\n'
+            this.segmentEndingBar = globals.SEGMENT_ENDING_BAR as boolean ?? true
+            this.fieldSeparator = globals.FIELD_SEPARATOR as string ?? '|'
+            this.componentSeparator = globals.COMPONENT_SEPARATOR as string ?? '^'
+            this.subcomponentSeparator = globals.SUBCOMPONENT_SEPARATOR as string ?? '&'
+            this.repetitionSeparator = globals.REPETITION_SEPARATOR as string ?? '~'
+            this.escapeChar = globals.ESCAPE_CHARACTER as string ?? '\\'
+            this.hl7Version = globals.HL7_VERSION as string ?? '2.3'
         }
 
         if (resetIndices) {
@@ -100,16 +99,16 @@ export default class Message {
      * @param emptySubFields 
      * @returns Components of a field
      */
-    extractComponentsFromFields(field: Field, emptySubFields: boolean):  any {
+    extractComponentsFromFields(field: Field, emptySubFields: boolean): any {
         let components: Field[] | Field[][] = (field as string).split(new RegExp(`\\${this.componentSeparator}`))
-        if(!emptySubFields) {
-            components = components.filter(isEmpty)
+        if (!emptySubFields) {
+            components = components.filter(negate(isEmpty))
         }
-        for(let [i, component] of components.entries()){
+        for (let [i, component] of components.entries()) {
             const subcomponents = (component as string).split(new RegExp(`\\${this.subcomponentSeparator}`))
-            components[i] =  subcomponents.length === 1 ? subcomponents[0] : subcomponents
+            components[i] = subcomponents.length === 1 ? subcomponents[0] : subcomponents
         }
-        return components.length === 1 ? components[0]  : components
+        return components.length === 1 ? components[0] : components
     }
     /**
      * 
@@ -260,7 +259,11 @@ export default class Message {
         return this.segments
     }
 
+    /**
+     * @returns stringified version of Message
+     */
     toString(): string {
+        const endingPattern = new RegExp(`\\${this.fieldSeparator}$`)
         if (isEmpty(this.segments)) {
             throw new HL7Exception('Message contains no data. Cannot convert to string')
         }
@@ -269,12 +272,14 @@ export default class Message {
         for (let segment of this.segments) {
             let segString: string = this.segmentToString(segment)
             if (!this.segmentEndingBar) {
-                segString = segString.replace(/\|$/, '')
+                segString = segString.replace(endingPattern, '')
             }
             message += segString
-
+            message += this.segmentSeparator
         }
+
         return message
+        
     }
 
     segmentToString(segment: Segment): string {
@@ -289,7 +294,7 @@ export default class Message {
                     } else {
                         str += value
                     }
-                    if (i < field.length - 1) {
+                    if (i < (field.length - 1)) {
                         str += this.componentSeparator
                     }
                 }
@@ -299,7 +304,7 @@ export default class Message {
 
             str += this.fieldSeparator
         }
-        return str
+        return str.replace(new RegExp(`\\${this.fieldSeparator}$`), '')
     }
 
 

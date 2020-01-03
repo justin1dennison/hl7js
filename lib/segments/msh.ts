@@ -17,10 +17,10 @@ export class MSH extends Segment {
    */
   constructor(fields: Field[] | null = null, globals?: HL7Globals) {
     super('MSH', fields)
-    if (!isNil(fields)) {
+    if (isNil(fields)) {
       if (!isObject(globals)) {
         this.setField(1, '|')
-        this.setField(2, '^!\\&')
+        this.setField(2, '^~\\&')
         this.setField(7, formatDate(new Date(), 'yyyymmddHHMMSS'))
 
         this.setField(10, `${this.getField(7)}${random(10000, 99999)}`)

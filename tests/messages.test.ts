@@ -1,6 +1,7 @@
 import test from 'tape'
 import Message from '../lib/messages'
-import { Segment } from '../lib/segments'
+import { Segment, MSH } from '../lib/segments'
+import { Field } from '../lib/types'
 
 test('subfields can be retained when required', t => {
   const message = new Message("MSH|^~\\&|1|\rPV1|1|O|^AAAA1^^^BB|", null, true)
@@ -11,52 +12,102 @@ test('subfields can be retained when required', t => {
 })
 
 test('segments can be added to existing message', t => {
-  t.pass()
+  const message = new Message()
+  message.addSegment(new MSH())
+  message.addSegment(new Segment('PID'))
+
+  const s0 = message.getSegmentByIndex(0)
+  const s1 = message.getSegmentByIndex(1)
+  t.equals(s0?.getName(), 'MSH', 'Segment 0 name MSH')
+  t.equals(s1?.getName(), 'PID', 'Segment 1 name PID')
   t.end()
 })
 
 test('fields can be added to existing segments', t => {
-  t.pass()
+  const message = new Message()
+  message.addSegment(new MSH())
+  message.addSegment(new Segment('ABC'))
+
+  const s0 = message.getSegmentByIndex(0)
+  const s1 = message.getSegmentByIndex(1)
+
+  s0?.setField(3, 'XXX')
+  s1?.setField(2, 'Foo')
+
+  t.equals(s0?.getField(3), 'XXX', '3rd field of MSH')
+  t.equals(s1?.getField(2), 'Foo', '2nd field of ABC')
+  t.equals(message.getSegmentByIndex(0)?.getField(3), 'XXX', '3rd field of MSH')
+  t.end()
+})
+
+test('control characters are properly set from MSH segment', t => {
+  const message = new Message('MSH|^~\\&|1|\rABC|||xxx|\r')
+  t.equals(message.getSegmentByIndex(0)?.getField(2), '^~\\&')
   t.end()
 })
 
 test('control characters can be customized using second argument', t => {
-  t.pass()
+  const msg = new Message('MSH|^~\\&|1|\nABC|||xxx|\n', { SEGMENT_SEPARATOR: '\r\n' })
+  t.equals(msg.toString(), 'MSH|^~\\&|1|\r\nABC|||xxx|\r\n', 'custom line endings')
   t.end()
 })
 
 test('message can be converted to string', t => {
-  t.pass()
+  const msg = new Message('MSH|^~\\&|1|\rABC|||xxx|\r')
+  t.equals(msg.toString(), 'MSH|^~\\&|1|\nABC|||xxx|\n')
   t.end()
 })
 
 test('toString method throws exception when message empty', t => {
-  t.pass()
+  const msg = new Message()
+  t.throws(() => {
+    msg.toString()
+  })
+  t.end()
+})
+
+test('components and subcomponents can be extracted from a field', t => {
+  const msg = new Message()
+  const field = 'xx^x&y&z^yy^zz'
+  const result = msg.extractComponentsFromFields(field, false)
+  t.deepEquals(result, ['xx', ['x', 'y', 'z'], 'yy', 'zz'])
   t.end()
 })
 
 test('fields and subfields can be set properly', t => {
-  t.pass()
+  const message = new Message('MSH|^~\\&|1|\rABC|||xx^x&y&z^yy^zz|\r')
+  const segment = message.getSegmentByIndex(1)
+  const field = (segment?.getField(3) as any)
+  t.equals('xx', field[0], 'Composed field')
+  t.equals('y', field[1][1], 'subcomposed field')
   t.end()
 })
 
-test('fields cna be separated by custom character', t => {
-  t.pass()
+test('fields can be separated by custom character', t => {
+  const message = new Message('MSH*^~\\&*1\rABC***xxx\r')
+  t.equals(message.toString(), 'MSH*^~\\&*1\nABC***xxx\n', 'string representation of message with * as field separator')
   t.end()
 })
 
 test('components of a field can be separated by custom character', t => {
-  t.pass()
+  const message = new Message('MSH|*~\\&|1\rABC|||x*y*z\r')
+  const field = message.getSegmentByIndex(1)?.getField(3) as any
+  t.equals(field[0], 'x', 'composed field with * as separator between subfields')
   t.end()
 })
 
 test('subcomponents can be separated by a custom character', t => {
-  t.pass()
+  const message = new Message("MSH|^~\\@|1\rABC|||a^x@y@z^b\r")
+  const field = message.getSegmentByIndex(1)?.getField(3) as any
+  t.equals(field[1][1], 'y', 'subcomposed field with @ as separator')
   t.end()
 })
 
 test('segments can be added from message', t => {
-  t.pass()
+  const message = new Message()
+  message.addSegment(new Segment('XXX'))
+  const name = message.getSegmentByIndex(0)?.getName() as any
+  t.equals(name, 'XXX', 'add segment')
   t.end()
 })
 
