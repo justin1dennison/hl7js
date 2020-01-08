@@ -1,7 +1,9 @@
 import { HL7Exception, InvalidArgumentError } from './errors'
 import { HL7Globals, Option, Field } from './types'
-import { negate, isEmpty, trim, isEqual, isArray, flatten } from 'lodash'
+import { negate, isEmpty, trim, isEqual, isArray, findIndex} from 'lodash'
 import { MSH, Segment } from './segments'
+
+
 
 export default class Message {
     protected segments: Segment[] = []
@@ -279,7 +281,7 @@ export default class Message {
         }
 
         return message
-        
+
     }
 
     segmentToString(segment: Segment): string {
@@ -307,5 +309,54 @@ export default class Message {
         return str.replace(new RegExp(`\\${this.fieldSeparator}$`), '')
     }
 
+    /**
+     * 
+     * @param index 
+     * @returns {string|undefined|null}
+     */
+    getSegmentAsString(index: number): Option<string> {
+        const seg = this.getSegmentByIndex(index)
+        return seg === null ? seg : this.segmentToString(seg as Segment)
+    }
+
+    getSegmentFieldAsString(segIndex: number, fieldIndex: number): Option<string> {
+        const seg = this.getSegmentByIndex(segIndex)
+        if(!seg) return seg
+        const field = seg?.getField(fieldIndex)
+        if(!field) return field
+        let s = ''
+        if(isArray(field)) {
+            for(let [i, f] of field.entries()) {
+                if(isArray(f)) s += field.join(this.subcomponentSeparator)
+                else s += field
+
+                if(i < field.length - 1) s += this.componentSeparator
+            }
+        } else {
+            s += field
+        }
+        return s
+    }
+
+    hasSegment(segment: string): boolean {
+        return this.getSegmentsByName(segment.toUpperCase()).length > 0
+    }
+
+    getFirstSegmentInstance(segment: string): Option<Segment> {
+        if(!this.hasSegment(segment)) return null
+        return this.getSegmentsByName(segment)[0]
+    }
+
+    removeSegment(segment: Segment, reIndex = false) {
+        let i
+        if(i = findIndex(this.segments, s => s === segment)) this.segments.splice(i, 1)
+        if(reIndex) {
+            const segs = this.getSegmentsByName(segment.getName() as string)
+            for(let [index, seg] of segs.entries()) {
+                seg.setField(1, (index + 1).toString() as Field)
+            }
+        }
+
+    }
 
 }

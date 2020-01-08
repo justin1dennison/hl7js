@@ -112,7 +112,16 @@ test('segments can be added from message', t => {
 })
 
 test('segment can be removed from message', t => {
-  t.pass()
+  let message = new Message("MSH|^~\\&|1|\nAAA|1||xxx|\nBBB|1|\nBBB|2|")
+  let segment = message.getFirstSegmentInstance('BBB')
+  message.removeSegment(segment as Segment)
+  t.equals(message.toString(), 'MSH|^~\\&|1|\nAAA|1||xxx|\nBBB|2|\n')
+
+  message = new Message("MSH|^~\\&|1|\nAAA|1||xxx|\nBBB|1|a|\nBBB|2|b|\nBBB|3|c|")
+  segment = message.getSegmentsByName('BBB')[1] 
+  message.removeSegment(segment, true)
+  t.equals(message.toString(), "MSH|^~\\&|1|\nAAA|1||xxx|\nBBB|1|a|\nBBB|2|c|\n", 'Should reset index of subsequent segments')
+
   t.end()
 })
 
