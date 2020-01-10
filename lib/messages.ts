@@ -1,6 +1,6 @@
 import { HL7Exception, InvalidArgumentError } from './errors'
 import { HL7Globals, Option, Field } from './types'
-import { negate, isEmpty, trim, isEqual, isArray, findIndex} from 'lodash'
+import { negate, isEmpty, trim, isEqual, isArray, findIndex } from 'lodash'
 import { MSH, Segment } from './segments'
 
 
@@ -321,16 +321,16 @@ export default class Message {
 
     getSegmentFieldAsString(segIndex: number, fieldIndex: number): Option<string> {
         const seg = this.getSegmentByIndex(segIndex)
-        if(!seg) return seg
+        if (!seg) return seg
         const field = seg?.getField(fieldIndex)
-        if(!field) return field
+        if (!field) return field
         let s = ''
-        if(isArray(field)) {
-            for(let [i, f] of field.entries()) {
-                if(isArray(f)) s += field.join(this.subcomponentSeparator)
+        if (isArray(field)) {
+            for (let [i, f] of field.entries()) {
+                if (isArray(f)) s += field.join(this.subcomponentSeparator)
                 else s += field
 
-                if(i < field.length - 1) s += this.componentSeparator
+                if (i < field.length - 1) s += this.componentSeparator
             }
         } else {
             s += field
@@ -343,16 +343,16 @@ export default class Message {
     }
 
     getFirstSegmentInstance(segment: string): Option<Segment> {
-        if(!this.hasSegment(segment)) return null
+        if (!this.hasSegment(segment)) return null
         return this.getSegmentsByName(segment)[0]
     }
 
     removeSegment(segment: Segment, reIndex = false) {
         let i
-        if(i = findIndex(this.segments, s => s === segment)) this.segments.splice(i, 1)
-        if(reIndex) {
+        if (i = findIndex(this.segments, s => s === segment)) this.segments.splice(i, 1)
+        if (reIndex) {
             const segs = this.getSegmentsByName(segment.getName() as string)
-            for(let [index, seg] of segs.entries()) {
+            for (let [index, seg] of segs.entries()) {
                 seg.setField(1, (index + 1).toString() as Field)
             }
         }

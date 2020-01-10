@@ -4,17 +4,25 @@
   "description": "Used for parsing, generating, and interacting with hl7 messages",
   "main": "index.js",
   "scripts": {
-    "test": "ts-node node_modules/tape/bin/tape tests/*.test.ts | faucet",
+    "test": "nyc ava tests/*.test.ts",
     "repl": "ts-node"
+  },
+  "ava": {
+    "compileEnhancements": false,
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   },
   "author": "Justin Dennison",
   "license": "MIT",
   "devDependencies": {
     "@types/date-fns": "^2.6.0",
     "@types/lodash": "^4.14.149",
-    "@types/tape": "^4.2.33",
-    "faucet": "0.0.1",
-    "tape": "^4.12.1",
+    "ava": "^2.4.0",
+    "nyc": "^15.0.0",
     "ts-node": "^8.5.4",
     "typescript": "^3.7.4"
   },
